@@ -1,0 +1,1 @@
+erl -config ./app.config -pa _build/default/lib/devsim/ebin -pa _build/default/lib/lager/ebin/ -pa _build/default/lib/goldrush/ebin -eval "application:start(compiler), application:start(syntax_tools), application:start(goldrush), application:start(lager), application:start(devsim)"

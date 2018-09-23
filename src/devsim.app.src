@@ -1,0 +1,28 @@
+{application, devsim,
+ [{description, "An OTP application"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, { devsim_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    compiler,
+    syntax_tools,
+    goldrush
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {maintainers, [zhli]},
+  {licenses, ["Apache 2.0"]},
+  {links, []}
+%   {env,[
+%       {lager, [{log_root, "/var/log/hello"},
+%                {handlers, [
+%                     {lager_console_backend, [{level, info}]},
+%                     {lager_file_backend, [{file, "error.log"}, {level, error}]},
+%                     {lager_file_backend, [{file, "console.log"}, {level, info}]}
+%                ]}]}
+%   ]}
+
+ ]}.
