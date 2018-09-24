@@ -41,13 +41,15 @@ send_msg_c2a(Client, Msg) ->
 loop(State, Config) ->
     receive
         {_From, {new_conn_nb, Acceptor}} ->
+            ?info("Received new_conn_nb"),
             Pid = telnet_client:start(Config#config.remote_addr,
                                       Config#config.remote_port_telnet),
             ets:insert(a2c_table, {Acceptor, Pid}),
             ets:insert(c2a_table, {Pid, Acceptor}),
             % dump ets tables here
             ?info("a2c_table: ~p", dump_table(a2c_table)),
-            ?info("c2a_table: ~p", dump_table(c2a_table));
+            ?info("c2a_table: ~p", dump_table(c2a_table)),
+            loop(State, Config);
 
         _ -> loop(State, Config)
     end.
