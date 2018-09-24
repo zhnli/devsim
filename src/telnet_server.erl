@@ -1,6 +1,8 @@
 -module(telnet_server).
 -export([start/1, send_msg/2]).
 
+-include("devsim.hrl").
+
 -record(server_state, {port, worker, config}).
 -record(worker_state, {port, socket}).
 
@@ -34,15 +36,15 @@ worker_start(Socket) ->
 worker_loop(Socket) ->
     receive
         {send_msg, Msg} ->
-            io:format("=> ~w:~w - send msg=~p~n", [?MODULE, ?LINE, Msg]),
+            ?info("Send message. Msg=~p", [Msg]),
             gen_tcp:send(Socket, Msg),
             worker_loop(Socket);
         {received_msg, Msg} ->
-            io:format("=> ~w:~w - received data=~p~n", [?MODULE, ?LINE, Msg]),
+            ?info("Received message. Msg=~p", [Msg]),
             telnet_proxy:send_msg_a2c(self(), Msg),
             worker_loop(Socket);
         _ ->
-            io:format("=> ~w:~w - unknown msg~n", [?MODULE, ?LINE]),
+            ?info("Unknown message received."),
             worker_loop(Socket)
     end.
 
@@ -50,7 +52,7 @@ recv_loop(Worker, Socket) ->
     case gen_tcp:recv(Socket, 0) of
         {ok, Data} ->
             % gen_tcp:send(Socket, Data),
-            io:format("=> telnet_server: recv_loop() - receive data=~p~n", [Data]),
+            ?info("Received data. Data=~p", [Data]),
             Worker ! {received_msg, Data},
             recv_loop(Worker, Socket);
         {error, closed} ->

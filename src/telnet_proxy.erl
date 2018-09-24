@@ -6,7 +6,9 @@
 
 -record(state, {s2c_table, c2s_table}).
 
-start(Config) ->
+start(ConfigOrig) ->
+    {ok, Addr} = inet:parse_address(ConfigOrig#config.remote_addr),
+    Config = ConfigOrig#config{remote_addr=Addr},
     {ok, State} = init(Config),
     Pid = spawn(fun() -> loop(State, Config) end),
     register(?MODULE, Pid),

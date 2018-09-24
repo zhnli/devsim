@@ -13,7 +13,7 @@ start(Addr, Port) ->
     %          spawn(fun() -> server_loop(init(Addr, Port)) end)).
 
 init(Addr, Port) ->
-    ?info("Telent connecting to ~p:~p", [Addr, Port]),
+    ?info("Telnet connecting to ~p:~p", [Addr, Port]),
     {ok, Socket} = gen_tcp:connect(Addr, Port, ?TCP_OPTIONS),
     WState = #worker_state{addr=Addr, port=Port, socket=Socket},
     Pid = spawn(fun() -> worker_start(WState) end),

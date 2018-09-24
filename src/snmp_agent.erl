@@ -40,8 +40,11 @@ init([Parent, Config]) ->
 
 do_init(Config) ->
     {ok, Socket} = gen_udp:open(Config#config.local_port_snmp, [binary]),
+    {ok, AddrTup} = inet:parse_address(Config#config.remote_addr),
+    Addr = tuple_to_list(AddrTup),
+    ?info("Addr=~p", [Addr]),
     {ok, #state{socket=Socket,
-                addr=Config#config.remote_addr,
+                addr=Addr,
                 port=Config#config.remote_port_snmp,
                 comm=Config#config.snmp_community,
                 user=Config#config.snmp_user,

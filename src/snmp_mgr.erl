@@ -55,7 +55,10 @@ do_init(Config) ->
     write_config(Dir, MgrConf),
     ok = start_manager(MgrOpts),
     ok = register_user(),
-    ok = register_agent(Config#config.remote_addr,
+    {ok, AddrTup} = inet:parse_address(Config#config.remote_addr),
+    Addr = tuple_to_list(AddrTup),
+    ?info("Addr=~p", [Addr]),
+    ok = register_agent(Addr,
                         Config#config.remote_port_snmp,
                         Config#config.snmp_community,
                         Config#config.snmp_user,
@@ -63,7 +66,7 @@ do_init(Config) ->
 
     Timer = erlang:send_after(3000, self(), timer),
 
-    {ok, #state{addr=Config#config.remote_addr,
+    {ok, #state{addr=Addr,
                 port=Config#config.remote_port_snmp,
                 comm=Config#config.snmp_community,
                 user=Config#config.snmp_user,
@@ -98,8 +101,6 @@ register_user() ->
 register_agent(Addr, Port, Comm, _User, _Pwd) ->
     Opts = [{engine_id, "snmp_engine"},
             {address,   Addr},
-            %{address,   [172,25,101,143]},
-            %{address, [127,0,0,1]},
             {port,      Port},
             {community, Comm},
             {version,   v2},
