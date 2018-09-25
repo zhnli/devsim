@@ -196,21 +196,39 @@ handle_call(E, _From, State) ->
 %     {noreply, State};
 handle_cast({send_get_req, Cntx, Oids}, State) ->
     ?info("Recived cast. Event=~p", [{send_get_req, Oids}]),
-    {ok, Reply, _Remaining} = snmpm:sync_get(?USER, State#state.addr, Oids),
-    ?info("Recived get_req response. Resp=~p", [Reply]),
-    snmp_proxy:handle_response(State#state.parent, Cntx, Reply),
+    % {ok, Reply, _Remaining} = snmpm:sync_get(?USER, State#state.addr, Oids),
+    case snmpm:sync_get(?USER, State#state.addr, Oids) of
+        {ok, Reply, _Remaining} ->
+            ?info("Recived get_req response. Resp=~p", [Reply]),
+            snmp_proxy:handle_response(State#state.parent, Cntx, Reply);
+        {error, {send_failed, _X, tooBig}} ->
+            ?info("Recived get_req response failed. Error=tooBig"),
+            snmp_proxy:handle_response(State#state.parent, Cntx, {tooBig, 0, []})
+    end,
     {noreply, State};
 handle_cast({send_get_next_req, Cntx, Oids}, State) ->
     ?info("Recived cast. Event=~p", [{send_get_next_req, Oids}]),
-    {ok, Reply, _Remaining} = snmpm:sync_get_next(?USER, State#state.addr, Oids),
-    ?info("Recived get_next_req response. Resp=~p", [Reply]),
-    snmp_proxy:handle_response(State#state.parent, Cntx, Reply),
+    % {ok, Reply, _Remaining} = snmpm:sync_get_next(?USER, State#state.addr, Oids),
+    case snmpm:sync_get_next(?USER, State#state.addr, Oids) of
+        {ok, Reply, _Remaining} ->
+            ?info("Recived get_next_req response. Resp=~p", [Reply]),
+            snmp_proxy:handle_response(State#state.parent, Cntx, Reply);
+        {error, {send_failed, _X, tooBig}} ->
+            ?info("Recived get_next_req response failed. Error=tooBig"),
+            snmp_proxy:handle_response(State#state.parent, Cntx, {tooBig, 0, []})
+    end,
     {noreply, State};
 handle_cast({send_get_bulk_req, Cntx, NonRep, MaxRep, Oids}, State) ->
     ?info("Recived cast. Event=~p", [{send_get_next_req, Oids}]),
-    {ok, Reply, _Remaining} = snmpm:sync_get_bulk(?USER, State#state.addr, NonRep, MaxRep, Oids),
-    ?info("Recived get_bulk_req response. Resp=~p", [Reply]),
-    snmp_proxy:handle_response(State#state.parent, Cntx, Reply),
+    % {ok, Reply, _Remaining} = snmpm:sync_get_bulk(?USER, State#state.addr, NonRep, MaxRep, Oids),
+    case snmpm:sync_get_bulk(?USER, State#state.addr, NonRep, MaxRep, Oids) of
+        {ok, Reply, _Remaining} ->
+            ?info("Recived get_bulk_req response. Resp=~p", [Reply]),
+            snmp_proxy:handle_response(State#state.parent, Cntx, Reply);
+        {error, {send_failed, _X, tooBig}} ->
+            ?info("Recived get_bulk_req response failed. Error=tooBig"),
+            snmp_proxy:handle_response(State#state.parent, Cntx, {tooBig, 0, []})
+    end,
     {noreply, State};
 handle_cast(E, State) ->
     ?info("Recived unexpected cast. Event=~p", [E]),
