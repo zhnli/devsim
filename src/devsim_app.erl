@@ -18,17 +18,50 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-    % lager:start(),
-    lager:error("Some message"),
+    io:format("Starting dependencise~n"),
+    ?info("Starting deps"),
+    ok = application:start(compiler),
+    ok = application:start(syntax_tools),
+    ok = application:start(goldrush),
+    ok = application:start(lager),
+    ok = application:start(crypto),
+    ok = application:start(sasl),
+    ok = application:start(asn1),
+    ok = application:start(public_key),
+    ok = application:start(ssl),
+    ok = application:start(ranch),
+    ok = application:start(cowlib),
+    ok = application:start(cowboy),
+
+    % Hackney
+    ok = application:start(metrics),
+    ok = application:start(ssl_verify_fun),
+    ok = application:start(certifi),
+    ok = application:start(mimerl),
+    ok = application:start(unicode_util_compat),
+    ok = application:start(idna),
+    ok = application:start(hackney),
+
+    % ok = application:start(devsim),
+
     ?info("Starting devsim."),
     Config = #config{remote_addr="172.25.101.143",
+                     % Telnet
                      local_port_telnet=8023,
                      remote_port_telnet=23,
+                     % SNMP
                      local_port_snmp=8161,
                      remote_port_snmp=161,
                      local_port_trap=8162,
                      remote_port_trap=162,
-                     snmp_community="cisco"
+                     snmp_community="cisco",
+                     % HTTP
+                     local_port_http=8443,
+                     remote_port_http=443,
+                     % Certs should be in DER format, PEM won't work
+                     ca_cert="certs/ca.crt",
+                     server_cert="certs/server.crt",
+                     priv_key="certs/server.key"
                     },
     devsim_sup:start_link(Config).
 

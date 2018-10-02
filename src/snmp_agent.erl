@@ -16,7 +16,7 @@
 -define(USER,     ?MODULE).
 -define(USER_MOD, ?MODULE).
 
--record(state, {parent, socket, addr, port, comm, user, pwd, timer}).
+-record(state, {parent, socket, addr, port, comm, timer}).
 
 %% ========================================
 %% API
@@ -46,9 +46,7 @@ do_init(Config) ->
     {ok, #state{socket=Socket,
                 addr=Addr,
                 port=Config#config.remote_port_snmp,
-                comm=Config#config.snmp_community,
-                user=Config#config.snmp_user,
-                pwd=Config#config.snmp_pwd}}.
+                comm=Config#config.snmp_community}}.
 
 send_response(Cntx, Pdu) ->
     gen_server:cast(snmp_agent, {send_response, Cntx, Pdu}).

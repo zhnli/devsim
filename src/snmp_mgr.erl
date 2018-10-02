@@ -20,7 +20,6 @@
 	     handle_invalid_result/3]).
 
 -include("devsim.hrl").
--include("log.hrl").
 
 -define(SERVER,   ?MODULE).
 -define(USER,     ?MODULE).
@@ -60,17 +59,13 @@ do_init(Config) ->
     ?info("Addr=~p", [Addr]),
     ok = register_agent(Addr,
                         Config#config.remote_port_snmp,
-                        Config#config.snmp_community,
-                        Config#config.snmp_user,
-                        Config#config.snmp_pwd),
+                        Config#config.snmp_community),
 
     Timer = erlang:send_after(3000, self(), timer),
 
     {ok, #state{addr=Addr,
                 port=Config#config.remote_port_snmp,
                 comm=Config#config.snmp_community,
-                user=Config#config.snmp_user,
-                pwd=Config#config.snmp_pwd,
                 timer=Timer}}.
 
 write_config(Dir, Conf) ->
@@ -98,7 +93,7 @@ register_user() ->
 	        error({failed_register_user, Error})
     end.
 
-register_agent(Addr, Port, Comm, _User, _Pwd) ->
+register_agent(Addr, Port, Comm) ->
     Opts = [{engine_id, "snmp_engine"},
             {address,   Addr},
             {port,      Port},
@@ -255,7 +250,7 @@ terminate(_Reason, _State) ->
 %% ========================================
 
 parse_opts(Opts) ->
-    Port     = get_opt(port,             Opts, 5000),
+    Port     = get_opt(port,             Opts, 5172), % Changed from 5000 to avoid clashing
     EngineId = get_opt(engine_id,        Opts, "mgrEngine"),
     MMS      = get_opt(max_message_size, Opts, 484),
 

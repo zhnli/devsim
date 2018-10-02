@@ -44,7 +44,13 @@ init(Config) ->
                    shutdown => brutal_kill,
                    type => worker,
                    modules => [snmp_proxy]},
-    {ok, {SupFlags, [ChildSpec1, ChildSpec2]}}.
+    ChildSpec3 = #{id => http_proxy,
+                   start => {http_proxy, start_link, [Config]},
+                   restart => permanent,
+                   shutdown => brutal_kill,
+                   type => worker,
+                   modules => [http_proxy]},
+    {ok, {SupFlags, [ChildSpec1, ChildSpec2, ChildSpec3]}}.
 
 %%====================================================================
 %% Internal functions

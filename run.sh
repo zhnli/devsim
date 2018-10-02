@@ -1,1 +1,15 @@
-erl -config ./app.config -pa _build/default/lib/devsim/ebin -pa _build/default/lib/lager/ebin/ -pa _build/default/lib/goldrush/ebin -eval "application:start(compiler), application:start(syntax_tools), application:start(goldrush), application:start(lager), application:start(devsim)"
+erl -config ./app.config \
+    -pa _build/default/lib/devsim/ebin \
+    -pa _build/default/lib/lager/ebin/ \
+    -pa _build/default/lib/goldrush/ebin \
+    -pa _build/default/lib/cowlib/ebin \
+    -pa _build/default/lib/cowboy/ebin \
+    -pa _build/default/lib/ranch/ebin \
+    -pa _build/default/lib/hackney/ebin \
+    -pa _build/default/lib/idna/ebin \
+    -pa _build/default/lib/unicode_util_compat/ebin \
+    -pa _build/default/lib/mimerl/ebin \
+    -pa _build/default/lib/certifi/ebin \
+    -pa _build/default/lib/ssl_verify_fun/ebin \
+    -pa _build/default/lib/metrics/ebin \
+    -eval "application:start(devsim)"

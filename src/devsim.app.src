@@ -5,10 +5,7 @@
   {mod, { devsim_app, []}},
   {applications,
    [kernel,
-    stdlib,
-    compiler,
-    syntax_tools,
-    goldrush
+    stdlib
    ]},
   {env,[]},
   {modules, []},

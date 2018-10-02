@@ -20,7 +20,9 @@
          local_port_telnet, remote_port_telnet,
          local_port_snmp, remote_port_snmp,
          local_port_trap, remote_port_trap,
-         snmp_community, snmp_user, snmp_pwd}).
+         snmp_community ,
+         local_port_http, remote_port_http,
+         ca_cert, server_cert, priv_key}).
 
 -record(msg_from,
         {addr,

@@ -1,10 +1,40 @@
 {"1.1.0",
-[{<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.9">>},1},
+[{<<"certifi">>,{pkg,<<"certifi">>,<<"2.4.2">>},1},
+ {<<"cowboy">>,
+  {git,"https://github.com/ninenines/cowboy",
+       {ref,"28d3515d716d32d1700fa21e904c613c139d4019"}},
+  0},
+ {<<"cowlib">>,
+  {git,"https://github.com/ninenines/cowlib",
+       {ref,"56a3fee151340212c1b7a92344e4ece07fc15010"}},
+  1},
+ {<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.9">>},1},
+ {<<"hackney">>,
+  {git,"https://github.com/benoitc/hackney",
+       {ref,"aa41e757bc6439096140b77de23465349a5d3113"}},
+  0},
+ {<<"idna">>,{pkg,<<"idna">>,<<"6.0.0">>},1},
  {<<"lager">>,
   {git,"https://github.com/erlang-lager/lager",
        {ref,"1249ede5bebfa8e23d281c0da602f479b9a6c66f"}},
-  0}]}.
+  0},
+ {<<"metrics">>,{pkg,<<"metrics">>,<<"1.0.1">>},1},
+ {<<"mimerl">>,{pkg,<<"mimerl">>,<<"1.0.2">>},1},
+ {<<"parse_trans">>,{pkg,<<"parse_trans">>,<<"3.3.0">>},2},
+ {<<"ranch">>,
+  {git,"https://github.com/ninenines/ranch",
+       {ref,"8eaae552ec520605b7f4b0e5943256d2b5e3621c"}},
+  1},
+ {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.4">>},1},
+ {<<"unicode_util_compat">>,{pkg,<<"unicode_util_compat">>,<<"0.4.1">>},2}]}.
 [
 {pkg_hash,[
- {<<"goldrush">>, <<"F06E5D5F1277DA5C413E84D5A2924174182FB108DABB39D5EC548B27424CD106">>}]}
+ {<<"certifi">>, <<"75424FF0F3BAACCFD34B1214184B6EF616D89E420B258BB0A5EA7D7BC628F7F0">>},
+ {<<"goldrush">>, <<"F06E5D5F1277DA5C413E84D5A2924174182FB108DABB39D5EC548B27424CD106">>},
+ {<<"idna">>, <<"689C46CBCDF3524C44D5F3DDE8001F364CD7608A99556D8FBD8239A5798D4C10">>},
+ {<<"metrics">>, <<"25F094DEA2CDA98213CECC3AEFF09E940299D950904393B2A29D191C346A8486">>},
+ {<<"mimerl">>, <<"993F9B0E084083405ED8252B99460C4F0563E41729AB42D9074FD5E52439BE88">>},
+ {<<"parse_trans">>, <<"09765507A3C7590A784615CFD421D101AEC25098D50B89D7AA1D66646BC571C1">>},
+ {<<"ssl_verify_fun">>, <<"F0EAFFF810D2041E93F915EF59899C923F4568F4585904D010387ED74988E77B">>},
+ {<<"unicode_util_compat">>, <<"D869E4C68901DD9531385BB0C8C40444EBF624E60B6962D95952775CAC5E90CD">>}]}
 ].
