@@ -47,12 +47,12 @@ loop(State, Config) ->
             ets:insert(a2c_table, {Acceptor, Pid}),
             ets:insert(c2a_table, {Pid, Acceptor}),
             % dump ets tables here
-            ?info("a2c_table: ~p", dump_table(a2c_table)),
-            ?info("c2a_table: ~p", dump_table(c2a_table)),
+            % ?info("a2c_table: ~p", dump_table(a2c_table)),
+            % ?info("c2a_table: ~p", dump_table(c2a_table)),
             loop(State, Config);
 
         _ -> loop(State, Config)
     end.
 
-dump_table(Table) ->
-    ets:match_object(Table, {'$0', '$1'}).
+% dump_table(Table) ->
+%     ets:match_object(Table, {'$0', '$1'}).
