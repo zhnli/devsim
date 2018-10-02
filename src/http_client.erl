@@ -51,12 +51,18 @@ handle_cast({send_request, Handler, Req, Opts, Method, URL, Headers, Payload}, S
     ],
     ?info("Sending request. Method=~p, URL=~p, Headers=~p, Payload=~p",
         [Method, URL, Headers, Payload]),
-    {ok, StatusCode, RespHeaders, ClientRef} =
-        hackney:request(Method, URL, Headers, Payload, Options),
-    ?info("Got response. Status=~p, Headers=~p", [StatusCode, RespHeaders]),
-    % Do not read whole body here, stream it later instead.
-    % {ok, Body} = hackney:body(ClientRef),
-    http_proxy:handle_response(Handler, Req, Opts, {StatusCode, RespHeaders, ClientRef}),
+    case hackney:request(Method, URL, Headers, Payload, Options) of
+        {ok, StatusCode, RespHeaders, ClientRef} ->
+            ?info("Got response. Status=~p, Headers=~p", [StatusCode, RespHeaders]),
+            % Do not read whole body here, stream it later instead.
+            % {ok, Body} = hackney:body(ClientRef),
+            http_proxy:handle_response(Handler, Req, Opts, {StatusCode, RespHeaders, ClientRef});
+        {ok, StatusCode, RespHeaders} ->
+            ?info("Got response without Ref. Status=~p, Headers=~p", [StatusCode, RespHeaders]),
+            http_proxy:handle_response_with_body(Handler, Req, Opts, {StatusCode, RespHeaders, undefined, <<"">>});
+        {error, Reason} ->
+            ?info("Failed to send request. Error=~p", [Reason])
+    end,
     {noreply, State};
 handle_cast({fetch_response_body, Handler, Req, Opts, {StatusCode, RespHeaders, Ref}}, State) ->
     case read_body(unlimited, Ref, <<"">>) of
