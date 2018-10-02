@@ -252,7 +252,7 @@ terminate(_Reason, _State) ->
 parse_opts(Opts) ->
     Port     = get_opt(port,             Opts, 5172), % Changed from 5000 to avoid clashing
     EngineId = get_opt(engine_id,        Opts, "mgrEngine"),
-    MMS      = get_opt(max_message_size, Opts, 484),
+    MMS      = get_opt(max_message_size, Opts, 4840),
 
     MgrConf = [{port,             Port},
                {engine_id,        EngineId},
