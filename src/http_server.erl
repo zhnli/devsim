@@ -45,7 +45,7 @@ init([Parent, Config]) ->
     {ok, _} = cowboy:start_tls(
         my_http_listener,
         [
-            {port, 8443},
+            {port, Config#config.local_port_http},
             {certfile, PrivDir ++ "/" ++ Config#config.server_cert},
             {keyfile, PrivDir ++ "/" ++ Config#config.priv_key}
         ],

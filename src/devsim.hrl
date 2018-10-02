@@ -15,6 +15,8 @@
 
 % -define(info(F, A), larger:lager_log(error,F, A)).
 
+-define(check(Pred,Ex1,Ex2), (case (Pred) of true -> (Ex1); false -> (Ex2) end)).
+
 -record(config,
         {remote_addr,
          local_port_telnet, remote_port_telnet,
