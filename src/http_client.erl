@@ -90,7 +90,7 @@ terminate(_Reason, _State) ->
     ?info("Terminated. Reason=~p", [_Reason]).
 
 %% ========================================
-%% private functions
+%% Private Functions
 %% ========================================
 
 read_body(MaxLength, Ref, Acc) when MaxLength == unlimited; MaxLength > byte_size(Acc) ->

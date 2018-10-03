@@ -11,14 +11,9 @@ init(Req, State) ->
 
 info({fetch_body, Opts, Method, URL, Headers}, Req0, State) ->
 	?info("Fetch request body"),
-	case cowboy_req:read_body(Req0) of
-        {ok, Data, Req} ->
-			http_proxy:handle_request_with_body(
-				self(), Req, Opts, Method, URL, Headers, Data, false);
-        {more, Data, Req} ->
-			http_proxy:handle_request_with_body(
-				self(), Req, Opts, Method, URL, Headers, Data, true)
-	end,
+	{ok, Req, Data} = read_req_body(unlimited, Req0, <<"">>),
+	http_proxy:handle_request_with_body(
+		self(), Req, Opts, Method, URL, Headers, Data, false),
 	{ok, Req, State};
 info({reply, Resp}, Req0, State) ->
 	?info("Received response. Resp=~p", [Resp]),
@@ -58,3 +53,15 @@ info(Msg, Req, State) ->
 terminate(_Reason, _Req, _State) ->
 	?info("HTTP client terminated"),
     ok.
+
+%% ========================================
+%% Private Functions
+%% ========================================
+
+read_req_body(MaxLength, Req0, Acc) when MaxLength == unlimited; MaxLength > byte_size(Acc) ->
+	case cowboy_req:read_body(Req0) of
+        {more, Data, Req} ->
+			read_req_body(MaxLength, Req, << Acc/binary, Data/binary >>);
+        {ok, Data, Req} ->
+			{ok, Req, << Acc/binary, Data/binary >>}
+	end.
