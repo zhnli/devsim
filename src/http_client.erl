@@ -46,7 +46,7 @@ handle_call(E, _From, State) ->
 handle_cast({send_request, Handler, Req, Opts, Method, URL, Headers, Payload}, State) ->
     Options = [
         {follow_redirect, true},   {max_redirect, 5},
-        {timeout, 150000},         {max_connections, 100},
+        {timeout, 1800000},        {max_connections, 100},
         {insecure, true}
     ],
     ?info("Sending request. Method=~p, URL=~p, Headers=~p, Payload=~p",
