@@ -95,17 +95,22 @@ write_snmp(Request, Response) ->
 handle_call({read_telnet, Command}, _From, State) ->
     F = fun() ->
         case mnesia:read({devsim_telnet, Command}) of
-            [#devsim_telnet{result=Res}] ->
-                [Res];
-            [] ->
-                []
+        [#devsim_telnet{result=Res}] ->
+            [Res];
+        [] ->
+            []
         end
     end,
     R = mnesia:activity(transaction, F),
     {reply, R, State};
 handle_call({read_snmp, Request}, _From, State) ->
     F = fun() ->
-        mnesia:read({devsim_snmp, Request})
+        case mnesia:read({devsim_snmp, Request}) of
+        [#devsim_snmp{response=Resp}] ->
+            [Resp];
+        [] ->
+            []
+        end
     end,
     R = mnesia:activity(transaction, F),
     {reply, R, State};

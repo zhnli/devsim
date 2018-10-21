@@ -74,7 +74,7 @@ handle_cast(E, State) ->
 handle_info({handle_request, Cntx, Pdu}, State) ->
     #snmp_cntx{from=From, version=Ver, community=Community} = Cntx,
     ?info("Recived request. From=~p, Version=~p, Community=~p, Pdu=~p", [From, Ver, Community, Pdu]),
-    process_request(Cntx, Pdu),
+    process_request(State, Cntx, Pdu),
     % case (catch snmp_pdus:dec_pdu(PduRaw)) of
     %     Pdu when is_record(Pdu, pdu) ->
     %         ?info("Decoded PDU. PDU=~p", [Pdu]);
@@ -88,7 +88,7 @@ handle_info({handle_request, Cntx, Pdu}, State) ->
     {noreply, State};
 handle_info({handle_response, Cntx, Resp}, State) ->
     ?info("Recived response. Resp=~p", [Resp]),
-    process_response(Cntx, Resp),
+    process_response(State, Cntx, Resp),
     {noreply, State}.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -103,29 +103,49 @@ terminate(_Reason, _State) ->
 %% Internal Funcs
 %% ========================================
 
-process_request(Cntx, Pdu) ->
+process_request(State, Cntx, Pdu) ->
     Type = Pdu#pdu.type,
     ReqId = Pdu#pdu.request_id,
     Varbinds = Pdu#pdu.varbinds,
-    NewCntx = Cntx#snmp_cntx{req_id=ReqId},
+    Oids = lists:map(fun(V) -> V#varbind.oid end, Varbinds),
+    NewCntx = Cntx#snmp_cntx{req_id=ReqId, req_type=Type, varbinds=Varbinds},
 
-    case Type of
+    case State#state.config#config.mode of
+    sim ->
+        Key = {Type, Varbinds},
+        case data_store:read_snmp(Key) of
+        [] ->
+            ?info("Failed to find response for request. ReqType=~p, Req=~p",
+                  [Type, Varbinds]),
+            ErrVarbinds = lists:map(
+                fun(V) ->
+                    #varbind{oid=V#varbind.oid,
+                             variabletype='NULL',
+                             value=noSuchObject,
+                             org_index=1}
+                end,
+                Varbinds),
+            process_response(State, NewCntx, {noError, 0, ErrVarbinds});
+        [Resp | _] ->
+            ?info("Find response. Resp=~p", [Resp]),
+            process_response(State, NewCntx, Resp)
+        end;
+    _ ->
+        case Type of
         'get-request' ->
             ?info("Received get-request"),
-            Oids = lists:map(fun(V) -> V#varbind.oid end, Varbinds),
             ?info("ReqId=~p, Oids=~p", [ReqId, Oids]),
             snmp_mgr:send_get_req(NewCntx, Oids);
         'get-next-request' ->
             ?info("Received get-next-request"),
-            Oids = lists:map(fun(V) -> V#varbind.oid end, Varbinds),
             ?info("ReqId=~p, Oids=~p", [ReqId, Oids]),
             snmp_mgr:send_get_next_req(NewCntx, Oids);
         'get-bulk-request' ->
             ?info("Received get-bulk-request"),
-            Oids = lists:map(fun(V) -> V#varbind.oid end, Varbinds),
             NonRep = Pdu#pdu.error_status,
             MaxRep = Pdu#pdu.error_index,
-            ?info("ReqId=~p, NonRep=~p, MaxRep=~p, Oids=~p", [ReqId, NonRep, MaxRep, Oids]),
+            ?info("ReqId=~p, NonRep=~p, MaxRep=~p, Oids=~p",
+                  [ReqId, NonRep, MaxRep, Oids]),
             snmp_mgr:send_get_bulk_req(NewCntx, NonRep, MaxRep, Oids);
         'get-response' ->
             ?info("Received get-response");
@@ -135,15 +155,25 @@ process_request(Cntx, Pdu) ->
             ?info("Received inform-request");
         'snmpv2-trap' ->
             ?info("Received snmpv2-trap");
-        '_' ->
+        _ ->
             ?info("Received unknown request")
+        end
     end.
 
-process_response(Cntx, Resp) ->
+process_response(State, Cntx, Resp) ->
     {ErrSt, ErrIdx, Varbinds} = Resp,
     Pdu = #pdu{type='get-response',
                request_id=Cntx#snmp_cntx.req_id,
                error_status=ErrSt,
                error_index=ErrIdx,
                varbinds=Varbinds},
-    snmp_agent:send_response(Cntx, Pdu).
+    snmp_agent:send_response(Cntx, Pdu),
+    case State#state.config#config.mode of
+    record ->
+        ReqType = Cntx#snmp_cntx.req_type,
+        ReqVarbinds = Cntx#snmp_cntx.varbinds,
+        Key = {ReqType, ReqVarbinds},
+        data_store:write_snmp(Key, Resp);
+    _ ->
+        ok
+    end.

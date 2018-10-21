@@ -48,4 +48,6 @@
         {from,
          version,
          community,
-         req_id}).
+         req_id,
+         req_type,
+         varbinds}).
