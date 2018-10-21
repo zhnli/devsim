@@ -1,4 +1,6 @@
 erl -config ./app.config \
+    -sname devsim \
+    -mnesia dir '"_db/"' \
     -pa _build/default/lib/devsim/ebin \
     -pa _build/default/lib/lager/ebin/ \
     -pa _build/default/lib/goldrush/ebin \
@@ -12,4 +14,6 @@ erl -config ./app.config \
     -pa _build/default/lib/certifi/ebin \
     -pa _build/default/lib/ssl_verify_fun/ebin \
     -pa _build/default/lib/metrics/ebin \
+    -setcookie MyCookie \
     -eval "application:start(devsim)"
+

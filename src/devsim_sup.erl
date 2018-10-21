@@ -32,6 +32,7 @@ start_link(Config) ->
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init(Config) ->
     SupFlags = #{strategy => one_for_one, intensity => 1, period => 5},
+
     ChildSpec1 = #{id => telnet_proxy,
                    start => {telnet_proxy, start, [Config]},
                    restart => permanent,
@@ -50,7 +51,14 @@ init(Config) ->
                    shutdown => brutal_kill,
                    type => worker,
                    modules => [http_proxy]},
-    {ok, {SupFlags, [ChildSpec1, ChildSpec2, ChildSpec3]}}.
+    ChildSpec4 = #{id => data_store,
+                   start => {data_store, start_link, [Config]},
+                   restart => permanent,
+                   shutdown => brutal_kill,
+                   type => worker,
+                   modules => [data_store]},
+
+    {ok, {SupFlags, [ChildSpec1, ChildSpec2, ChildSpec3, ChildSpec4]}}.
 
 %%====================================================================
 %% Internal functions
