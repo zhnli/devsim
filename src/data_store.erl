@@ -77,7 +77,7 @@ read_telnet(Command) ->
     gen_server:call(data_store, {read_telnet, Command}).
 
 read_snmp(Request) ->
-    ?info("Read SNMP from DB. Request=~p, Re=~p", [Request]),
+    ?info("Read SNMP from DB. Request=~p", [Request]),
     gen_server:call(data_store, {read_snmp, Request}).
 
 write_telnet(Command, Result) ->
@@ -85,7 +85,7 @@ write_telnet(Command, Result) ->
     gen_server:call(data_store, {write_telnet, Command, Result}).
 
 write_snmp(Request, Response) ->
-    ?info("Write SNMP into DB. Command=~p, Result=~p", [Request, Response]),
+    ?info("Write SNMP into DB. Req=~p, Resp=~p", [Request, Response]),
     gen_server:call(data_store, {write_snmp, Request, Response}).
 
 %% ========================================
