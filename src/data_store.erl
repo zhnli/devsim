@@ -59,7 +59,7 @@ setup_db(Nodes) ->
     {already_exists, _Table_name} ->
         ?info("Found table devsim_telnet.");
     {aborted, Reason1} ->
-        ?error("Table devsim_telnet NOT created. Reason=~p", [Reason1])
+        ?info("Table devsim_telnet NOT created. Reason=~p", [Reason1])
     end,
     case mnesia:create_table(devsim_snmp,
         [{attributes, record_info(fields, devsim_snmp)},
@@ -69,7 +69,7 @@ setup_db(Nodes) ->
     {already_exists, _Table_name1} ->
         ?info("Found table devsim_snmp.");
     {aborted, Reason2} ->
-        ?error("Table devsim_snmp NOT created. Reason=~p", [Reason2])
+        ?info("Table devsim_snmp NOT created. Reason=~p", [Reason2])
     end.
 
 read_telnet(Command) ->

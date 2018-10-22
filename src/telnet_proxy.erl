@@ -46,6 +46,15 @@ change_acceptor_state(State, Acceptor, NewAccState) ->
     NewMap = maps:put(Acceptor, NewAccState, State#state.acceptor_map),
     State#state{acceptor_map=NewMap}.
 
+get_system_prompt() ->
+    case data_store:read_telnet(system_prompt__) of
+    [] ->
+        ?error("Failed to find system_prompt__"),
+        <<"\r\n#">>;
+    [Prompt | _] ->
+        Prompt
+    end.
+
 handle_new_conn_nb(Config, State, Acceptor) ->
     ?info("Handle new connection from north"),
     case Config#config.mode of
@@ -54,7 +63,7 @@ handle_new_conn_nb(Config, State, Acceptor) ->
         NewState = change_acceptor_state(State, Acceptor, AccState),
         case data_store:read_telnet(username_prompt__) of
         [] ->
-            ?info("Failed to find username_prompt__.");
+            ?error("Failed to find username_prompt__.");
         [Resp | _] ->
             telnet_server:send_msg(Acceptor, Resp)
         end;
@@ -79,14 +88,24 @@ handle_sim_command_response(State, Acceptor, Msg) ->
     password_prompt ->
         NewAccState = AcceptorState#acceptor_state{stage=run_command},
         NewState = change_acceptor_state(State, Acceptor, NewAccState),
-        SystemPrompt = data_store:read_telnet(system_prompt__),
-        telnet_server:send_msg(Acceptor, SystemPrompt);
+        telnet_server:send_msg(Acceptor, get_system_prompt());
     run_command ->
-        ValidMsg = string:trim(Msg),
+        case binary_part(Msg, {byte_size(Msg), -2}) =:= <<"\r\n">> of
+        true ->
+            ValidMsg = string:trim(Msg);
+        false ->
+            case binary_part(Msg, {byte_size(Msg), -2}) =:= <<13,0>> of
+            true ->
+                ValidMsg = binary_part(Msg, {0, byte_size(Msg)-2});
+            false ->
+                ValidMsg = Msg
+            end
+        end,
         case data_store:read_telnet(ValidMsg) of
         [] ->
-            ?info("Failed to find response. Cmd=~p", [ValidMsg]),
-            telnet_server:send_msg(Acceptor, <<"\r\nUnknown Input">>);
+            ?error("Failed to find response. Cmd=~p", [ValidMsg]),
+            SystemPrompt = get_system_prompt(),
+            telnet_server:send_msg(Acceptor, <<"\r\nUnknown Input", SystemPrompt/binary>>);
         [Resp | _] ->
             telnet_server:send_msg(Acceptor, <<"\r\n", Resp/binary>>)
         end,
@@ -119,25 +138,43 @@ msg_a2c(Config, State, Acceptor, Msg) ->
         telnet_client:send_msg(Client, Msg),
         NewState = State;
     sim ->
-        case byte_size(Msg) >= 2 andalso
-             binary_part(Msg, {byte_size(Msg), -2}) =:= <<"\r\n">> of
-        false ->
-            telnet_server:send_msg(Acceptor, Msg),
-            case ets:lookup(telnet_record, Acceptor) of
-            [] ->
-                ets:insert(telnet_record, {Acceptor, Msg});
-            [{_, PrevMsg} | _] ->
-                ets:insert(telnet_record, {Acceptor, <<PrevMsg/binary, Msg/binary>>})
-            end,
-            NewState = State;
+        case byte_size(Msg) >= 2 andalso binary_part(Msg, {0,2}) =:= <<255,251>> of
         true ->
-            case ets:lookup(telnet_record, Acceptor) of
-            [] ->
-                NewMsg = Msg;
-            [{_, PrevMsg} | _] ->
-                NewMsg = <<PrevMsg/binary, Msg/binary>>
-            end,
-            NewState = handle_sim_command_response(State, Acceptor, NewMsg)
+            telnet_server:send_msg(Acceptor,
+                <<255,251,1,255,251,3,255,253,24,255,253,31>>),
+            telnet_server:send_msg(Acceptor,
+                <<255,254,37,75,101,114,98,101,114,111,115,58,32,78,111,32,
+                  100,101,102,97,117,108,116,32,114,101,97,108,109,32,100,
+                  101,102,105,110,101,100,32,102,111,114,32,75,101,114,98,
+                  101,114,111,115,33,13,10,255,250,24,1,255,240>>),
+            telnet_server:send_msg(Acceptor,
+                <<255,253,33,255,250,33,0,255,240>>),
+            telnet_server:send_msg(Acceptor,
+                <<255,254,34,255,254,39,255,252,5,255,254,35>>),
+            NewState = State;
+        false ->
+            case byte_size(Msg) >= 2 andalso
+                 (binary_part(Msg, {byte_size(Msg), -2}) =:= <<"\r\n">> orelse
+                  binary_part(Msg, {byte_size(Msg), -2}) =:= <<13,0>>) of
+            false ->
+                telnet_server:send_msg(Acceptor, Msg),
+                case ets:lookup(telnet_record, Acceptor) of
+                [] ->
+                    ets:insert(telnet_record, {Acceptor, Msg});
+                [{_, PrevMsg} | _] ->
+                    ets:insert(telnet_record, {Acceptor, <<PrevMsg/binary, Msg/binary>>})
+                end,
+                NewState = State;
+            true ->
+                case ets:lookup(telnet_record, Acceptor) of
+                [] ->
+                    NewMsg = Msg;
+                [{_, PrevMsg} | _] ->
+                    NewMsg = <<PrevMsg/binary, Msg/binary>>
+                end,
+                clear_input_buff(Acceptor),
+                NewState = handle_sim_command_response(State, Acceptor, NewMsg)
+            end
         end
     end,
     NewState.
@@ -145,10 +182,12 @@ msg_a2c(Config, State, Acceptor, Msg) ->
 is_input_submitted(Acceptor) ->
     case ets:lookup(telnet_record, Acceptor) of
     [] ->
-        ?info("Failed to find the Command");
+        ?error("Failed to find the Command"),
+        false;
     [{_, Command} | _] ->
         byte_size(Command) >= 2 andalso
-            binary_part(Command, {byte_size(Command), -2}) =:= <<13,0>>
+        (binary_part(Command, {byte_size(Command), -2}) =:= <<"\r\n">> orelse
+         binary_part(Command, {byte_size(Command), -2}) =:= <<13,0>>)
     end.
 
 clear_input_buff(Acceptor) ->
@@ -157,21 +196,23 @@ clear_input_buff(Acceptor) ->
 handle_command_response(State, Acceptor, AccState, Msg) ->
     case ets:lookup(telnet_record, Acceptor) of
     [] ->
-        ?info("Failed to find the Command of this response. Cmd=~p", [Msg]),
+        ?error("Failed to find the Command of this response. Cmd=~p", [Msg]),
         NewState = State;
     [{_, Command} | _] ->
         case byte_size(Command) >= 2 andalso
-             binary_part(Command, {byte_size(Command), -2}) =:= <<13,0>> of
+             (binary_part(Command, {byte_size(Command), -2}) =:= <<"\r\n">> orelse
+              binary_part(Command, {byte_size(Command), -2}) =:= <<13,0>>) of
         true ->
             StrippedPrompt = string:trim(AccState#acceptor_state.prompt),
             PromptSize = byte_size(StrippedPrompt),
-            case binary_part(Msg, {byte_size(Msg), -PromptSize}) =:= StrippedPrompt of
+            case byte_size(Msg) >= PromptSize andalso
+                 binary_part(Msg, {byte_size(Msg), -PromptSize}) =:= StrippedPrompt of
             true ->
                 FullMsg = <<(AccState#acceptor_state.buff)/binary, Msg/binary>>,
                 NewAccState = AccState#acceptor_state{buff= <<"">>},
                 NewState = change_acceptor_state(State, Acceptor, NewAccState),
                 clear_input_buff(Acceptor),
-                ValidCmd = binary_part(Command, {0, byte_size(Command)-2}),
+                ValidCmd = string:trim(binary_part(Command, {0, byte_size(Command)-2})),
                 ?info("Record command and response. Cmd=~p, Resp=~p",
                       [binary_to_list(ValidCmd), FullMsg]),
                 data_store:write_telnet(ValidCmd, FullMsg);
