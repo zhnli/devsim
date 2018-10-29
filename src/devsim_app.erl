@@ -52,20 +52,21 @@ start(_StartType, _StartArgs) ->
 
     ?info("Starting devsim."),
     Config = #config {
-        mode=default,
+        mode=sim,
         remote_addr="172.25.101.140",
         % Telnet
-        local_port_telnet=8023,
+        local_port_telnet=23,
         remote_port_telnet=23,
         % SNMP
-        local_port_snmp=8161,
+        local_port_snmp=161,
         remote_port_snmp=161,
-        local_port_trap=8162,
+        local_port_trap=162,
         remote_port_trap=162,
         snmp_community="cisco",
         % HTTP
-        local_port_http=8443,
-        remote_port_http=443,
+        local_port_http=443,
+        remote_port_http=8443,
+        remote_addr_http="172.25.101.183",
         % Certs should be in DER format, PEM won't work
         ca_cert="certs/ca.crt",
         server_cert="certs/server.crt",

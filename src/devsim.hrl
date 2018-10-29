@@ -37,6 +37,7 @@
          local_port_trap, remote_port_trap,
          snmp_community ,
          local_port_http, remote_port_http,
+         remote_addr_http,
          ca_cert, server_cert, priv_key}).
 
 -record(msg_from,

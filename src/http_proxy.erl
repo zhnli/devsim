@@ -71,19 +71,19 @@ handle_cast({handle_request, Handler, Req, Opts}, State) ->
     URL = case maps:get(qs, Req) of
         {badkey, _Key} ->
             iolist_to_binary([
-                list_to_binary("https://" ++ State#state.config#config.remote_addr),
+                list_to_binary("https://" ++ State#state.config#config.remote_addr_http),
                 ?check(Port == 443, <<"">>, list_to_binary(":" ++ integer_to_list(Port))),
                 maps:get(path, Req)
             ]);
         <<"">> ->
             iolist_to_binary([
-                list_to_binary("https://" ++ State#state.config#config.remote_addr),
+                list_to_binary("https://" ++ State#state.config#config.remote_addr_http),
                 ?check(Port == 443, <<"">>, list_to_binary(":" ++ integer_to_list(Port))),
                 maps:get(path, Req)
             ]);
         Qs ->
             iolist_to_binary([
-                list_to_binary("https://" ++ State#state.config#config.remote_addr),
+                list_to_binary("https://" ++ State#state.config#config.remote_addr_http),
                 ?check(Port == 443, <<"">>, list_to_binary(":" ++ integer_to_list(Port))),
                 maps:get(path, Req),
                 <<"?">>,
